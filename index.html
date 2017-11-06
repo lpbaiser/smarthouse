@@ -38,6 +38,7 @@
         $(this).text('Abrir portão');
       }
     };
+
     function funcPorta() {
       var xhttp = new XMLHttpRequest();
       xhttp.open("POST", "/porta", true);
@@ -51,16 +52,16 @@
         $(this).text('Abrir porta');
       }
     };
+
     function getLogs() {
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open("GET", '/getLogs', true); // true for asynchronous 
       xmlHttp.send(null);
-      var myObj, txt, myJson;
+      var myObj, txt = '', myJson;
       xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
           myJson = JSON.parse(xmlHttp.responseText);
           myObj = myJson.logs;
-          console.log(myObj.length)
           if (myObj.length > 0) {
             txt += "<table border='1'>"
             txt += "<th> LOGIN</th>"

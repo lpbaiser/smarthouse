@@ -27,7 +27,7 @@ var chavePortao = 'F';
 var chavePorta = 'F';
 var body = '';
 
-var idLogin = 1;
+var idLogin = null;
 
 function servidor(request, response) {
 
@@ -47,7 +47,6 @@ function servidor(request, response) {
     fs.readFile('./index.html', "utf8", function (err, data) {
       if (err) throw err;
       response.write(data);
-      response.end();
       response.end();
     });
 
@@ -72,20 +71,19 @@ function servidor(request, response) {
           if (err) {
             console.log(err);
             response.writeHead(401);
-            response.end(fs.readFileSync('./login.html'));
+            response.end();
+            return;
           } else {
             user = content;
-            idLogin = user.idLogin;
+            if (!user) {
+              response.writeHead(401);
+              response.end();
+              return;
+            }
+            console.log(user);
+            idLogin = user.idlogin;
             response.writeHead(200);
-            response.end(fs.readFileSync('./index.html'));
-            // getLogs(function (err, content) {
-            //   if (err) {
-            //     console.log(err);
-            //   } else {
-            //     console.log(content)
-            //   }
-            // })
-            console.log('USUARIO', user);
+            response.end();
           }
         });
       });
@@ -156,7 +154,7 @@ function servidor(request, response) {
       if (err) {
         console.log(err);
       } else {
-        console.log(content)
+        // console.log(content)
         sendLogs(response, content);
       }
     })
@@ -169,10 +167,9 @@ function servidor(request, response) {
 
 function fazerLogin(login, senha, callback) {
   connection.query(
-    'SELECT idLogin, login FROM `login` WHERE `login` = ? AND `senha` = ?',
+    'SELECT idlogin, login FROM `login` WHERE `login` = ? AND `senha` = ?',
     [login, senha],
     function (err, rows) {
-      // console.log(rows)
       if (err) {
         callback(err, null);
       } else {
