@@ -1,0 +1,87 @@
+<html>
+
+<head>
+  <title>Leds</title>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+</head>
+
+<body>
+  <ul class="list-inline">
+    <li>
+      <h3>Controles</h3>
+      <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success">Abrir portão</a>
+    </li>
+    <li>
+      <a id="porta" onclick="funcPorta.call(this)" class="btn btn-success">Abrir porta</a>
+    </li>
+    <li>
+      <a id="logs" onclick="getLogs.call(this)" class="btn btn-primary">GET LOGS</a>
+    </li>
+  </ul>
+
+  <p id="demo"></p>
+
+  <script type="text/javascript">
+    var controlePortao = 1;
+    var controlePorta = 1;
+    function funcPortao() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "/portao", true);
+      xhttp.send(JSON.stringify({ controlePortao: controlePortao }));
+      $(this).toggleClass('btn-warning');
+      if (controlePortao == 1) {
+        $(this).text('Fechar portão');
+        controlePortao = 0;
+      } else {
+        controlePortao = 1;
+        $(this).text('Abrir portão');
+      }
+    };
+    function funcPorta() {
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "/porta", true);
+      xhttp.send(JSON.stringify({ controlePorta: controlePorta }));
+      $(this).toggleClass('btn-warning');
+      if (controlePorta == 1) {
+        $(this).text('Fechar porta');
+        controlePorta = 0;
+      } else {
+        controlePorta = 1;
+        $(this).text('Abrir porta');
+      }
+    };
+    function getLogs() {
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.open("GET", '/getLogs', true); // true for asynchronous 
+      xmlHttp.send(null);
+      var myObj, txt, myJson;
+      xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          myJson = JSON.parse(xmlHttp.responseText);
+          myObj = myJson.logs;
+          console.log(myObj.length)
+          if (myObj.length > 0) {
+            txt += "<table border='1'>"
+            txt += "<th> LOGIN</th>"
+            txt += "<th> AÇÃO</th>"
+            txt += "<th> TIPO</th>"
+            txt += "<th> DATA</th>"
+            myObj.map(function (item, index) {
+              txt += "<tr><td>" + item.idlogin + "</td>";
+              txt += "<td>" + item.acao + "</td>";
+              txt += "<td>" + item.tipo + "</td>";
+              txt += "<td>" + item.data + "</td></tr>";
+            })
+            txt += "</table>"
+            document.getElementById("demo").innerHTML = txt;
+          }
+        }
+      }
+    };
+    window.onload = getLogs;
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+</body>
+
+</html>

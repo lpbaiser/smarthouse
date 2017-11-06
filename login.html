@@ -1,0 +1,42 @@
+<html>
+
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <div class="container" style="width: 30%">
+        <h3>Faça o login</h3>
+        <form>
+            <div class="form-group">
+                <label for="exampleInputEmail1">Login</label>
+                <input type="text" name="login" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="digite seu login">
+            </div>
+            <div class="form-group">
+                <label for="exampleInputPassword1">Senha</label>
+                <input type="password" name="user[senha]" class="form-control" id="exampleInputPassword1" placeholder="digite sua senha">
+            </div>
+            <!-- <button  class="btn btn-primary pull-right">Acessar</button> -->
+            <a id="logar" onclick="logar.call(this)" class="btn btn-primary">Acessar</a>
+            <a id="entrar" onclick="entrar.call(this)" class="btn btn-primary">Entrar</a>
+        </form>
+    </div>
+    <script>
+        function logar() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/login", true);
+            xhttp.send(JSON.stringify({ login: 'lpbaiser', senha: '1234' }));
+        };
+        function entrar() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/index", true);
+            xhttp.send();
+        };
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+</body>
+
+</html>
