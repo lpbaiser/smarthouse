@@ -5,7 +5,7 @@ const fs = require('fs');
 const five = require('johnny-five');
 const mysql = require('mysql2');
 const arduino = new five.Board();
-var led, portao, porta;
+var led, portao, porta, buzzer;
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -20,6 +20,9 @@ arduino.on('ready', function () {
   led = new five.Led(13);
   portao = new five.Servo(8);
   porta = new five.Servo(9);
+  buzzer = new five.Piezo(10);
+  // buzzer.noTone();
+  // buzzer.tone(0, 0);
   porta.to(-90);
 });
 
@@ -36,11 +39,11 @@ function servidor(request, response) {
     response.writeHead(200);
     response.end(fs.readFileSync('./login.html'));
   } else if (url == '/index') {
-    if (!idLogin) {
-      response.writeHead(200);
-      response.end(fs.readFileSync('./login.html'));
-      return;
-    }
+    // if (!idLogin) {
+    //   response.writeHead(200);
+    //   response.end(fs.readFileSync('./login.html'));
+    //   return;
+    // }
     response.writeHead(200, {
       "Content-Type": "text/html"
     });
@@ -83,6 +86,7 @@ function servidor(request, response) {
             console.log(user);
             idLogin = user.idlogin;
             response.writeHead(200);
+            response.write({'idlogin': idLogin})
             response.end();
           }
         });
@@ -158,6 +162,20 @@ function servidor(request, response) {
         sendLogs(response, content);
       }
     })
+  } else if (url == '/buzzer') {
+    response.writeHead(302, { 'Location': '/' });
+    response.end();
+    portao.to(90);
+    // buzzer.play({
+    //   // song is composed by a string of notes
+    //   // a default beat is set, and the default octave is used
+    //   // any invalid note is read as "no note"
+    //   song: "C D F D A - A A A A G G G G - - C D F D G - G G G G F F F F - -",
+    //   beats: 1 / 4,
+    //   tempo: 100
+    // });
+    // buzzer.frequency(587, 1000);
+    // buzzer.tone(0, 1000);
   } else {
     response.writeHead(200);
     response.end("<h1>Erro 404</h1>");

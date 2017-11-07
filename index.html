@@ -10,6 +10,8 @@
   <div class="container">
     <h3>Controles do sistema</h3>
 
+    <a id="buzzer" onclick="funcTocaBuzzer.call(this)" class="btn btn-success" style="width:100%">Tocar Buzzer</a>
+
     <div class="col-md-6">
       <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success" style="width:100%">Abrir portão</a>
       <p id="tabela1"></p>
@@ -51,6 +53,18 @@
         $(this).text('Abrir porta');
       }
     };
+
+    function funcTocaBuzzer(){
+      var xhttp = new XMLHttpRequest();
+      xhttp.open("POST", "/buzzer", true);
+      xhttp.send();
+    }
+
+    function postLogin(){
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.open("POST", '/index', true); // true for asynchronous 
+      xmlHttp.send(JSON.stringify({idlogin: localStorage.getItem(idlogin)}));
+    }
 
     function getLogs() {
       var xmlHttp = new XMLHttpRequest();

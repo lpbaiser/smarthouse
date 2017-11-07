@@ -34,7 +34,10 @@
             xhttp.send(JSON.stringify({ login: login, senha: senha }));
             xhttp.onreadystatechange = function () {
                 if (xhttp.readyState == 4 && xhttp.status == 200) {
-                    window.location.href = "/index";
+                    console.log(xhttp.responseText)
+                    // window.location.href = "/index";
+                    localStorage.setItem('isLogado', true);
+                    localStorage.setItem('idlogin', 1);
                 } else {
                     document.getElementById("erro").innerHTML = 'Credenciais inválidas!';
                 }
