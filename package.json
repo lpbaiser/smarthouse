@@ -1,0 +1,27 @@
+{
+  "name": "ArduinoJs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "trabalhoHttp.js",
+  "repository": "",
+  "scripts": {
+    "start": "node trabalhoHttp.js",
+    "dev": "nodemon trabalhoHttp.js",
+    "bd": "node create_tables.js"
+  },
+  "authors": [
+    {
+      "name": "Leonardo Baiser",
+      "email": "lpbaiser@gmail.com"
+    }
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "johnny-five": "^0.11.7",
+    "moment": "^2.19.1",
+    "mysql2": "^1.4.2",
+    "nodemon": "^1.12.1",
+    "querystring": "^0.2.0"
+  },
+  "devDependencies": {}
+}

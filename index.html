@@ -1,26 +1,25 @@
 <html>
 
 <head>
-  <title>Leds</title>
+  <title>Controle</title>
   <meta charset="UTF-8">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 </head>
 
 <body>
-  <ul class="list-inline">
-    <li>
-      <h3>Controles</h3>
-      <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success">Abrir portão</a>
-    </li>
-    <li>
-      <a id="porta" onclick="funcPorta.call(this)" class="btn btn-success">Abrir porta</a>
-    </li>
-    <li>
-      <a id="logs" onclick="getLogs.call(this)" class="btn btn-primary">GET LOGS</a>
-    </li>
-  </ul>
+  <div class="container">
+    <h3>Controles do sistema</h3>
 
-  <p id="demo"></p>
+    <div class="col-md-6">
+      <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success" style="width:100%">Abrir portão</a>
+      <p id="tabela1"></p>
+    </div>
+    <div class="col-md-6">
+      <a id="porta" onclick="funcPorta.call(this)" class="btn btn-success" style="width:100%">Abrir porta</a>
+      <p id="tabela2"></p>
+    </div>
+  </div>
+  </div>
 
   <script type="text/javascript">
     var controlePortao = 1;
@@ -57,25 +56,38 @@
       var xmlHttp = new XMLHttpRequest();
       xmlHttp.open("GET", '/getLogs', true); // true for asynchronous 
       xmlHttp.send(null);
-      var myObj, txt = '', myJson;
+      var myObj, tabela1 = '', tabela2 = '', myJson;
       xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
           myJson = JSON.parse(xmlHttp.responseText);
           myObj = myJson.logs;
           if (myObj.length > 0) {
-            txt += "<table border='1'>"
-            txt += "<th> LOGIN</th>"
-            txt += "<th> AÇÃO</th>"
-            txt += "<th> TIPO</th>"
-            txt += "<th> DATA</th>"
+            tabela1 += "<table class='table' border='1'>"
+            tabela2 += "<table class='table' border='1'>"
+            tabela1 += "<th> LOGIN</th>"
+            tabela2 += "<th> LOGIN</th>"
+            tabela1 += "<th> AÇÃO</th>"
+            tabela2 += "<th> AÇÃO</th>"
+            tabela1 += "<th> TIPO</th>"
+            tabela2 += "<th> TIPO</th>"
+            tabela1 += "<th> DATA</th>"
+            tabela2 += "<th> DATA</th>"
             myObj.map(function (item, index) {
-              txt += "<tr><td>" + item.idlogin + "</td>";
-              txt += "<td>" + item.acao + "</td>";
-              txt += "<td>" + item.tipo + "</td>";
-              txt += "<td>" + item.data + "</td></tr>";
+              if (item.tipo === 'PORTAO') {
+                tabela1 += "<tr><td>" + item.idlogin + "</td>";
+                tabela1 += "<td>" + item.acao + "</td>";
+                tabela1 += "<td>" + item.tipo + "</td>";
+                tabela1 += "<td>" + moment(item.data).zone(-3).format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
+              } else {
+                tabela2 += "<tr><td>" + item.idlogin + "</td>";
+                tabela2 += "<td>" + item.acao + "</td>";
+                tabela2 += "<td>" + item.tipo + "</td>";
+                tabela2 += "<td>" + moment(item.data).zone(-3).format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
+              }
             })
-            txt += "</table>"
-            document.getElementById("demo").innerHTML = txt;
+            tabela1 += "</table>"
+            document.getElementById("tabela1").innerHTML = tabela1;
+            document.getElementById("tabela2").innerHTML = tabela2;
           }
         }
       }
@@ -83,6 +95,7 @@
     window.onload = getLogs;
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="https://momentjs.com/downloads/moment.js"></script>
 </body>
 
 </html>
