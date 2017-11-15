@@ -4,8 +4,10 @@ var qs = require('querystring');
 const fs = require('fs');
 const five = require('johnny-five');
 const mysql = require('mysql2');
+const CONFIG = require('./configuration')
+const Alarm = require('./alarm')
 const arduino = new five.Board();
-var led, portao, porta, buzzer;
+var led, portao, porta, buzzer, sensor;
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -14,23 +16,59 @@ const connection = mysql.createConnection({
   database: 'bdarduino'
 });
 
-arduino.on('ready', function () {
-  console.log("Arduino Pronto");
-
-  led = new five.Led(13);
-  portao = new five.Servo(8);
-  porta = new five.Servo(9);
-  buzzer = new five.Piezo(10);
-  // buzzer.noTone();
-  // buzzer.tone(0, 0);
-  porta.to(-90);
-});
-
 var chavePortao = 'F';
 var chavePorta = 'F';
 var body = '';
 
 var idLogin = null;
+
+let alarmePorta;
+let alarmePortao;
+
+let acaoAlarme = true;
+var intervalAlarme = null;
+
+arduino.on('ready', function () {
+  console.log("Arduino Pronto");
+
+  led = new five.Led(CONFIG.LED.PIN);
+  portao = new five.Servo(CONFIG.PORTAO.PIN);
+  porta = new five.Servo(CONFIG.PORTA.PIN);
+  // buzzer = new five.Piezo(CONFIG.BUZZER.PIN);
+  alarm = new Alarm();
+  sensor = new five.Motion(CONFIG.PIR.PIN);
+  // buzzer.noTone();
+  // buzzer.tone(0, 0);
+  porta.to(-90);
+
+
+
+  // sensor.on("data", function() {
+  //   console.log("data");
+  // });
+
+  // "calibrated" occurs once, at the beginning of a session,
+  sensor.on("calibrated", function () {
+    console.log("calibrated");
+  });
+
+  // "motionstart" events are fired when the "calibrated"
+  // proximal area is disrupted, generally by some form of movement
+  sensor.on("motionstart", function () {
+    console.log("motionstart");
+    if (acaoAlarme) {
+      alarm.startAlarm();
+    }
+  });
+
+  // "motionend" events are fired following a "motionstart" event
+  // when no movement has occurred in X ms
+  sensor.on("motionend", function () {
+    console.log("motionend");
+  });
+
+});
+
 
 function servidor(request, response) {
 
@@ -39,11 +77,6 @@ function servidor(request, response) {
     response.writeHead(200);
     response.end(fs.readFileSync('./login.html'));
   } else if (url == '/index') {
-    // if (!idLogin) {
-    //   response.writeHead(200);
-    //   response.end(fs.readFileSync('./login.html'));
-    //   return;
-    // }
     response.writeHead(200, {
       "Content-Type": "text/html"
     });
@@ -52,8 +85,6 @@ function servidor(request, response) {
       response.write(data);
       response.end();
     });
-
-
 
   } else if (url == '/login') {
     let login;
@@ -83,11 +114,10 @@ function servidor(request, response) {
               response.end();
               return;
             }
-            console.log(user);
+
             idLogin = user.idlogin;
             response.writeHead(200);
-            response.write({'idlogin': idLogin})
-            response.end();
+            response.end(JSON.stringify({ idlogin: content.idlogin }));
           }
         });
       });
@@ -96,13 +126,28 @@ function servidor(request, response) {
   } else if (url == '/portao') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
+    buzzer.play({
+      song: "C - D - C",
+      beats: 1 / 3,
+      tempo: 60
+    });
     if (chavePortao == 'F') {
+      alarmePortao = setInterval(function () {
+        buzzer.play({
+          song: "C - C - C",
+          beats: 1 / 3,
+          tempo: 60
+        });
+      }, 5000);
       chavePortao = 'A';
       portao.to(-90);
     } else {
+      clearInterval(alarmePortao)
       chavePortao = 'F';
       portao.to(90);
     }
+
+
 
     if (request.method == 'POST') {
       request.on('data', function (data) {
@@ -111,7 +156,9 @@ function servidor(request, response) {
       request.on('end', function () {
         var POST = qs.parse(body);
         var jsonS = JSON.parse(body)
+        console.log(jsonS.controlePortao)
         let acao = jsonS.controlePortao == 0 ? 'FECHAR' : 'ABRIR';
+        let idLogin = jsonS.idLogin;
         let tipo = 'PORTAO';
         saveLog(acao, tipo, idLogin, function (err) {
           if (err) {
@@ -127,10 +174,23 @@ function servidor(request, response) {
   } else if (url == '/porta') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
+    buzzer.play({
+      song: "C - D -",
+      beats: 1 / 2,
+      tempo: 60
+    });
     if (chavePorta == 'F') {
+      alarmePorta = setInterval(function () {
+        buzzer.play({
+          song: "C - C - C",
+          beats: 1 / 3,
+          tempo: 60
+        });
+      }, 5000);
       chavePorta = 'A';
       porta.to(90);
     } else {
+      clearInterval(alarmePorta)
       chavePorta = 'F';
       porta.to(-90);
     }
@@ -142,6 +202,7 @@ function servidor(request, response) {
         var POST = qs.parse(body);
         var jsonS = JSON.parse(body)
         let acao = jsonS.controlePorta == 0 ? 'FECHAR' : 'ABRIR';
+        let idLogin = jsonS.idLogin;
         let tipo = 'PORTA';
         saveLog(acao, tipo, idLogin, function (err) {
           if (err) {
@@ -162,25 +223,19 @@ function servidor(request, response) {
         sendLogs(response, content);
       }
     })
-  } else if (url == '/buzzer') {
+  } else if (url == '/stopAlarme') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
-    portao.to(90);
-    // buzzer.play({
-    //   // song is composed by a string of notes
-    //   // a default beat is set, and the default octave is used
-    //   // any invalid note is read as "no note"
-    //   song: "C D F D A - A A A A G G G G - - C D F D G - G G G G F F F F - -",
-    //   beats: 1 / 4,
-    //   tempo: 100
-    // });
-    // buzzer.frequency(587, 1000);
-    // buzzer.tone(0, 1000);
+    alarm.stopAlarm();
   } else {
     response.writeHead(200);
     response.end("<h1>Erro 404</h1>");
   }
 };
+
+function enviaAlertaAlarmeDisparou() {
+
+}
 
 
 function fazerLogin(login, senha, callback) {
