@@ -14,8 +14,8 @@
         <h3>Controles do sistema</h3>
       </div>
       <div class="col-md-4 bg-warning" id='disparoAlarme'>
-          Alarme inativo
-        </div>
+        Alarme inativo
+      </div>
 
       <div class="col-md-4">
         <div class="col-md-8">
@@ -48,11 +48,20 @@
       </div>
     </div>
 
-    <div class="col-md-6">
-      <div id="tabela1"></div>
-    </div>
-    <div class="col-md-6">
-      <div id="tabela2"></div>
+    <div class="col-md-12">
+      <h3>Logs</h3>
+      <div class="col-md-4">
+        <h4>Alarme</h4>
+        <div id="tabelaAlarme"></div>
+      </div>
+      <div class="col-md-4">
+        <h4>Portão</h4>
+        <div id="tabelaPortao"></div>
+      </div>
+      <div class="col-md-4">
+        <h4>Porta</h4>
+        <div id="tabelaPorta"></div>
+      </div>
     </div>
   </div>
 
@@ -168,6 +177,7 @@
           myJson = JSON.parse(xmlHttp.responseText);
           temperatura = myJson.temperatura;
           document.getElementById("temperatura").innerHTML = temperatura + '˚C';
+          getLogs();
         }
       }
     }
@@ -180,7 +190,7 @@
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
           myJson = JSON.parse(xmlHttp.responseText);
           disparoAlarme = myJson.disparoAlarme;
-          if (disparoAlarme == true){
+          if (disparoAlarme == true) {
             document.getElementById("disparoAlarme").innerHTML = 'Alarme disparou';
             document.getElementById("disparoAlarme").className = 'col-md-4 bg-danger';
           }
@@ -189,47 +199,66 @@
     }
 
     function getLogs() {
-      document.getElementById("tabela1").innerHTML = 'tabela1';
+      document.getElementById("tabelaPortao").innerHTML = 'tabelaPortao';
       xmlHttp.open("GET", '/getLogs', true); // true for asynchronous 
       xmlHttp.send(null);
-      var myObj, tabela1 = '', tabela2 = '', myJson;
+      var logs, tabelaAlarme = '', tabelaPortao = '', tabelaPorta = '', myJson;
+
       xmlHttp.onreadystatechange = function () {
         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
           myJson = JSON.parse(xmlHttp.responseText);
-          myObj = myJson.logs;
-          if (myObj.length > 0) {
-            tabela1 += "<table class='table' border='1'>"
-            tabela2 += "<table class='table' border='1'>"
-            tabela1 += "<th> LOGIN</th>"
-            tabela2 += "<th> LOGIN</th>"
-            tabela1 += "<th> AÇÃO</th>"
-            tabela2 += "<th> AÇÃO</th>"
-            tabela1 += "<th> TIPO</th>"
-            tabela2 += "<th> TIPO</th>"
-            tabela1 += "<th> DATA</th>"
-            tabela2 += "<th> DATA</th>"
-            myObj.map(function (item, index) {
-              if (item.tipo === 'PORTAO') {
-                tabela1 += "<tr><td>" + item.idlogin + "</td>";
-                tabela1 += "<td>" + item.acao + "</td>";
-                tabela1 += "<td>" + item.tipo + "</td>";
-                tabela1 += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
-              } else {
-                tabela2 += "<tr><td>" + item.idlogin + "</td>";
-                tabela2 += "<td>" + item.acao + "</td>";
-                tabela2 += "<td>" + item.tipo + "</td>";
-                tabela2 += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
-              }
+          logs = myJson.logs;
+          let logsAlarme = logs.logsAlarme;
+          let logsPorta = logs.logsPorta;
+          let logsPortao = logs.logsPortao;
+
+          if (logsAlarme.length > 0) {
+            tabelaAlarme += "<table class='table' border='1'>"
+            tabelaAlarme += "<th> LOGIN</th>"
+            tabelaAlarme += "<th> AÇÃO</th>"
+            tabelaAlarme += "<th> DATA</th>"
+            logsAlarme.map(function (item, index) {
+              tabelaAlarme += "<tr><td>" + item.login + "</td>";
+              tabelaAlarme += "<td>" + item.acao + "</td>";
+              tabelaAlarme += "<td>" + moment(item.data).format('DD/MM/YYYY HH:mm:ss') + "</td></tr>";
             })
-            tabela1 += "</table>"
-            console.log('tabela1', tabela1)
-            document.getElementById("tabela1").innerHTML = tabela1;
-            document.getElementById("tabela2").innerHTML = tabela2;
+            tabelaAlarme += "</table>"
+            console.log('tabelaPortao', tabelaAlarme)
+            document.getElementById("tabelaAlarme").innerHTML = tabelaAlarme;
+          }
+
+          if (logsPortao.length > 0) {
+            tabelaPortao += "<table class='table' border='1'>"
+            tabelaPortao += "<th> LOGIN</th>"
+            tabelaPortao += "<th> AÇÃO</th>"
+            tabelaPortao += "<th> DATA</th>"
+            logsPortao.map(function (item, index) {
+              tabelaPortao += "<tr><td>" + item.login + "</td>";
+              tabelaPortao += "<td>" + item.acao + "</td>";
+              tabelaPortao += "<td>" + moment(item.data).format('DD/MM/YYYY HH:mm:ss') + "</td></tr>";
+            })
+            tabelaPortao += "</table>"
+            console.log('tabelaPortao', tabelaPortao)
+            document.getElementById("tabelaPortao").innerHTML = tabelaPortao;
+          }
+          if (logsPorta.length > 0) {
+            tabelaPorta += "<table class='table' border='1'>"
+            tabelaPorta += "<th> LOGIN</th>"
+            tabelaPorta += "<th> AÇÃO</th>"
+            tabelaPorta += "<th> DATA</th>"
+            logsPorta.map(function (item, index) {
+              tabelaPorta += "<tr><td>" + item.login + "</td>";
+              tabelaPorta += "<td>" + item.acao + "</td>";
+              tabelaPorta += "<td>" + moment(item.data).format('DD/MM/YYYY HH:mm:ss') + "</td></tr>";
+            })
+            tabelaPorta += "</table>"
+            document.getElementById("tabelaPorta").innerHTML = tabelaPorta;
           }
         }
       }
     };
 
+    // tabelaPortao += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY hh:mm:ss') + "</td></tr>";
     setInterval(() => {
       getTemperatura();
     }, 60000)//atualiza temperatura a cada minuto;
@@ -242,7 +271,8 @@
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <!-- <script src="https://momentjs.com/downloads/moment.js"></script> -->
-  <script src="https://momentjs.com/downloads/moment-timezone.js"></script>
+  <!-- <script src="https://momentjs.com/downloads/moment-timezone.js"></script> -->
+  <script src="moment.js"></script>
 </body>
 
 </html>

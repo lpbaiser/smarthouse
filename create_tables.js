@@ -15,7 +15,8 @@ connection.connect(function (err) {
     var table_logs = "CREATE TABLE logs_alarme (idlogs int(11) NOT NULL AUTO_INCREMENT, acao enum('ATIVADO','DESATIVADO') NOT NULL, data datetime NOT NULL, idlogin int(11) DEFAULT NULL, PRIMARY KEY (idlogs), KEY idlogin (idlogin), CONSTRAINT idlogin FOREIGN KEY (idlogin) REFERENCES login (idlogin));";
     var insert_login = "INSERT INTO login (login, senha) VALUES ?";
     var values = [
-        ['login', '1234'],
+        ['lpbaiser', '123'],
+        ['rmeloca', '456'],
     ];
     connection.query(table_login, function (err, result) {
         if (err) throw err;

@@ -1,5 +1,6 @@
 
 const mysql = require('mysql2');
+const Promise = require("bluebird");
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -26,18 +27,22 @@ ControllerBd.prototype.login = function (login, senha, callback) {
     );
 };
 
-ControllerBd.prototype.getLogs = function (callback) {
-    connection.query(
-        'SELECT * FROM `logs` ORDER BY data DESC',
-        function (err, result, fields) {
-            // console.log(rows)
-            if (err) {
-                callback(err, null);
-            } else {
-                callback(null, result);
+ControllerBd.prototype.getLogs = function (tipo) {
+    let where = 'SELECT la.idlogs, la.data, la.acao, la.tipo, l.idlogin, l.login FROM logs AS la, login AS l WHERE tipo = \'' + tipo + '\' ORDER BY data DESC LIMIT 20';
+    console.log(where);
+    return new Promise(function (resolve, reject) {
+        connection.query(
+            where,
+            function (err, result, fields) {
+                // console.log(rows)
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
             }
-        }
-    );
+        );
+    })
 }
 
 ControllerBd.prototype.saveLog = function (acao, tipo, idLogin, callback) {
@@ -72,6 +77,24 @@ ControllerBd.prototype.saveLogAlarme = function (acao, idLogin, callback) {
             }
         }
     );
+}
+
+ControllerBd.prototype.getLogsAlarme = function () {
+    let where = 'SELECT la.idlogs, la.data, la.acao, l.idlogin, l.login FROM logs_alarme AS la, login AS l ORDER BY data DESC LIMIT 20';
+    console.log(where);
+    return new Promise(function (resolve, reject) {
+        connection.query(
+            where,
+            function (err, result, fields) {
+                // console.log(rows)
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+    })
 }
 
 module.exports = ControllerBd;

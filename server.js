@@ -1,4 +1,5 @@
 const http = require('http').createServer(servidor);
+const Promise = require("bluebird");
 const five = require('johnny-five');
 const arduino = new five.Board();
 const url = require('url');
@@ -215,14 +216,33 @@ function servidor(request, response) {
       });
     }
   } else if (url == '/getLogs') {
-    controllerBd.getLogs(function (err, content) {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(content)
-        sendLogs(response, content);
-      }
+    let logsPorta, logsPortao, logsAlarme;
+    return new Promise(function (resolve, reject) {
+      controllerBd.getLogs('PORTA')
+        .then((result) => {
+          logsPorta = result;
+          return controllerBd.getLogs('PORTAO')
+        })
+        .then((result) => {
+          logsPortao = result;
+          return controllerBd.getLogsAlarme()
+        })
+        .then((result) => {
+          logsAlarme = result;
+          response.writeHead(200, { "Content-Type": "application/json" });
+          var json = JSON.stringify({
+            logs: {
+              logsPorta,
+              logsPortao,
+              logsAlarme
+            },
+          });
+          response.end(json);
+          resolve();
+        })
+        .catch(reject);
     })
+
   } else if (url == '/alarme') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
@@ -307,12 +327,29 @@ function servidor(request, response) {
       temperatura: temperaturaAtual,
     });
     response.end(json);
+  } else if (url.endsWith('.js')) {
+    response.writeHead(200, {
+      "Content-Type": "application/javascript"
+    });
+    fs.readFile('.' + url, "utf8", function (err, data) {
+      if (err) throw err;
+      response.write(data);
+      response.end();
+    });
+  } else if (url.endsWith('.css')) {
+    response.writeHead(200, {
+      "Content-Type": "text/css"
+    });
+    fs.readFile('.' + url, "utf8", function (err, data) {
+      if (err) throw err;
+      response.write(data);
+      response.end();
+    });
   } else {
     response.writeHead(200);
     response.end("<h1>Erro 404</h1>");
   }
 };
-
 
 function sendLogs(response, logs) {
   response.writeHead(200, { "Content-Type": "application/json" });
