@@ -5,8 +5,8 @@
   "main": "trabalhoHttp.js",
   "repository": "",
   "scripts": {
-    "start": "node trabalhoHttp.js",
-    "dev": "nodemon trabalhoHttp.js",
+    "start": "node server.js",
+    "dev": "nodemon server.js",
     "bd": "node create_tables.js"
   },
   "authors": [

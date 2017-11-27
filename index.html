@@ -8,33 +8,69 @@
 
 <body>
   <div class="container">
-    <h3>Controles do sistema</h3>
 
-    <a id="alarm" onclick="funcStopAlarme.call(this)" class="btn btn-success" style="width:100%">Desligar alarme</a>
+    <div class="col-md-12">
+      <div class="col-md-4">
+        <h3>Controles do sistema</h3>
+      </div>
+      <div class="col-md-4 bg-warning" id='disparoAlarme'>
+          Alarme inativo
+        </div>
+
+      <div class="col-md-4">
+        <div class="col-md-8">
+          <h4>Temperatura ambiente: </h4>
+        </div>
+        <div class="col-md-4">
+          <h4 id='temperatura'></h4>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-12">
+      <div class="col-md-2">
+        <a id="alarm" onclick="funcStopAlarme.call(this)" class="btn btn-success" style="width:100%">Ativar alarme</a>
+      </div>
+      <div class="col-md-2">
+        <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success" style="width:100%">Abrir portão</a>
+      </div>
+      <div class="col-md-2">
+        <a id="porta" onclick="funcPorta.call(this)" class="btn btn-success" style="width:100%">Abrir porta</a>
+      </div>
+      <div class="col-md-2">
+        <a id="logs" onclick="getLogs.call(this)" class="btn btn-success" style="width:100%">Ver logs</a>
+      </div>
+      <div class="col-md-2">
+        <a id="ventilador" onclick="funcVentilador.call(this)" class="btn btn-success" style="width:100%">Ligar ventilador</a>
+      </div>
+      <div class="col-md-2">
+        <a id="led" onclick="funcLed.call(this)" class="btn btn-success" style="width:100%">Ligar led</a>
+      </div>
+    </div>
 
     <div class="col-md-6">
-      <a id="portao" onclick="funcPortao.call(this)" class="btn btn-success" style="width:100%">Abrir portão</a>
-      <p id="tabela1"></p>
+      <div id="tabela1"></div>
     </div>
     <div class="col-md-6">
-      <a id="porta" onclick="funcPorta.call(this)" class="btn btn-success" style="width:100%">Abrir porta</a>
-      <p id="tabela2"></p>
+      <div id="tabela2"></div>
     </div>
-  </div>
   </div>
 
   <script type="text/javascript">
-    var controlePortao = 1;
-    var controlePorta = 1;
+    let xmlHttp = new XMLHttpRequest();
+    let idLogin = localStorage.getItem('idlogin');
+    let controlePortao = 1;
+    let controlePorta = 1;
+    let controleAlarme = 1;
+    let controleVentilador = 1;
+    let controleLed = 1;
     function funcPortao() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", "/portao", true);
-      let idLogin = localStorage.getItem('idlogin');
+      xmlHttp.open("POST", "/portao", true);
       let action = {
         controlePortao: controlePortao,
         idLogin: idLogin
       }
-      xhttp.send(JSON.stringify(action));
+      xmlHttp.send(JSON.stringify(action));
       $(this).toggleClass('btn-warning');
       if (controlePortao == 1) {
         $(this).text('Fechar portão');
@@ -46,14 +82,13 @@
     };
 
     function funcPorta() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", "/porta", true);
-      let idLogin = localStorage.getItem('idlogin');
+      xmlHttp.open("POST", "/porta", true);
+
       let action = {
-        controlePorta: controlePortao,
+        controlePorta: controlePorta,
         idLogin: idLogin
       }
-      xhttp.send(JSON.stringify(action));
+      xmlHttp.send(JSON.stringify(action));
       $(this).toggleClass('btn-warning');
       if (controlePorta == 1) {
         $(this).text('Fechar porta');
@@ -65,19 +100,96 @@
     };
 
     function funcStopAlarme() {
-      var xhttp = new XMLHttpRequest();
-      xhttp.open("POST", "/stopAlarme", true);
-      xhttp.send();
+      let action = {
+        controleAlarme: controleAlarme,
+        idLogin: idLogin
+      }
+      xmlHttp.open("POST", "/alarme", true);
+      xmlHttp.send(JSON.stringify(action));
+      $(this).toggleClass('btn-warning');
+      if (controleAlarme == 1) {
+        $(this).text('Desativar alarme');
+        controleAlarme = 0;
+        document.getElementById("disparoAlarme").innerHTML = 'Alarme ativo';
+        document.getElementById("disparoAlarme").className = 'col-md-4 bg-primary';
+      } else {
+        controleAlarme = 1;
+        $(this).text('Ativar alarme');
+        document.getElementById("disparoAlarme").innerHTML = 'Alarme inativo';
+        document.getElementById("disparoAlarme").className = 'col-md-4 bg-warning';
+      }
     }
 
+    function funcVentilador() {
+      xmlHttp.open("POST", "/ventilador", true);
+      let action = {
+        controleVentilador: controleVentilador,
+        idLogin: idLogin
+      }
+      xmlHttp.send(JSON.stringify(action));
+      $(this).toggleClass('btn-warning');
+      if (controleVentilador == 1) {
+        $(this).text('Desligar ventilador');
+        controleVentilador = 0;
+      } else {
+        controleVentilador = 1;
+        $(this).text('Ligar ventilador');
+      }
+    };
+
+    function funcLed() {
+      xmlHttp.open("POST", "/led", true);
+      let action = {
+        controleLed: controleLed,
+        idLogin: idLogin
+      }
+      xmlHttp.send(JSON.stringify(action));
+      $(this).toggleClass('btn-warning');
+      if (controleLed == 1) {
+        $(this).text('Desligar led');
+        controleLed = 0;
+      } else {
+        controleLed = 1;
+        $(this).text('Ligar led ');
+      }
+    };
+
     function postLogin() {
-      var xmlHttp = new XMLHttpRequest();
       xmlHttp.open("POST", '/index', true); // true for asynchronous 
       xmlHttp.send(JSON.stringify({ idlogin: localStorage.getItem(idlogin) }));
     }
 
+    function getTemperatura() {
+      let myJson, temperatura;
+      xmlHttp.open("POST", '/temperatura', true);
+      xmlHttp.send(null);
+      xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          myJson = JSON.parse(xmlHttp.responseText);
+          temperatura = myJson.temperatura;
+          document.getElementById("temperatura").innerHTML = temperatura + '˚C';
+        }
+      }
+    }
+
+    function getDisparoAlarme() {
+      let myJson, disparoAlarme;
+      xmlHttp.open("POST", '/disparoAlarme', true);
+      xmlHttp.send(null);
+      xmlHttp.onreadystatechange = function () {
+        if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+          myJson = JSON.parse(xmlHttp.responseText);
+          disparoAlarme = myJson.disparoAlarme;
+          if (disparoAlarme == true){
+            document.getElementById("disparoAlarme").innerHTML = 'Alarme disparou';
+            document.getElementById("disparoAlarme").className = 'col-md-4 bg-danger';
+          }
+        }
+      }
+    }
+
     function getLogs() {
-      var xmlHttp = new XMLHttpRequest();
+      document.getElementById("tabela1").innerHTML = 'tabela1';
       xmlHttp.open("GET", '/getLogs', true); // true for asynchronous 
       xmlHttp.send(null);
       var myObj, tabela1 = '', tabela2 = '', myJson;
@@ -101,25 +213,36 @@
                 tabela1 += "<tr><td>" + item.idlogin + "</td>";
                 tabela1 += "<td>" + item.acao + "</td>";
                 tabela1 += "<td>" + item.tipo + "</td>";
-                tabela1 += "<td>" + moment(item.data).zone(-3).format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
+                tabela1 += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
               } else {
                 tabela2 += "<tr><td>" + item.idlogin + "</td>";
                 tabela2 += "<td>" + item.acao + "</td>";
                 tabela2 += "<td>" + item.tipo + "</td>";
-                tabela2 += "<td>" + moment(item.data).zone(-3).format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
+                tabela2 += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY - hh:mm:ss') + "</td></tr>";
               }
             })
             tabela1 += "</table>"
+            console.log('tabela1', tabela1)
             document.getElementById("tabela1").innerHTML = tabela1;
             document.getElementById("tabela2").innerHTML = tabela2;
           }
         }
       }
     };
-    window.onload = getLogs;
+
+    setInterval(() => {
+      getTemperatura();
+    }, 60000)//atualiza temperatura a cada minuto;
+
+    setInterval(() => {
+      getDisparoAlarme();
+    }, 1000)//verifica se alarme disparou a cada 1 segundo
+
+    window.onload = getTemperatura();
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://momentjs.com/downloads/moment.js"></script>
+  <!-- <script src="https://momentjs.com/downloads/moment.js"></script> -->
+  <script src="https://momentjs.com/downloads/moment-timezone.js"></script>
 </body>
 
 </html>

@@ -1,13 +1,14 @@
 const http = require('http').createServer(servidor);
+const five = require('johnny-five');
+const arduino = new five.Board();
 const url = require('url');
 var qs = require('querystring');
 const fs = require('fs');
-const five = require('johnny-five');
 const mysql = require('mysql2');
 const CONFIG = require('./configuration')
 const Alarm = require('./alarm')
-const arduino = new five.Board();
-var led, portao, porta, buzzer, sensor;
+const ControllerBd = require('./controller-bd')
+var led, portao, porta, buzzer, sensor, ir, motor, temperatura;
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -16,17 +17,22 @@ const connection = mysql.createConnection({
   database: 'bdarduino'
 });
 
-var chavePortao = 'F';
-var chavePorta = 'F';
-var body = '';
-
-var idLogin = null;
+let chavePortao = 'F';
+let chavePorta = 'F';
+let body = '';
+let idLogin = null;
 
 let alarmePorta;
 let alarmePortao;
 
-let acaoAlarme = true;
-var intervalAlarme = null;
+let acaoAlarme = false;
+let disparoAlarme = false;
+let intervalAlarme = null;
+
+let acaoVentilador = false;
+
+let temperaturaAtual;
+
 
 arduino.on('ready', function () {
   console.log("Arduino Pronto");
@@ -36,16 +42,28 @@ arduino.on('ready', function () {
   porta = new five.Servo(CONFIG.PORTA.PIN);
   // buzzer = new five.Piezo(CONFIG.BUZZER.PIN);
   alarm = new Alarm();
+  controllerBd = new ControllerBd();
   sensor = new five.Motion(CONFIG.PIR.PIN);
-  // buzzer.noTone();
-  // buzzer.tone(0, 0);
+  temperatura = new five.Thermometer({
+    controller: CONFIG.TEMPERATURA.TYPE,
+    pin: CONFIG.TEMPERATURA.PIN
+  });
+
   porta.to(-90);
 
+  motor = new five.Motor([3, 4]);
+  motor.fwd(255);
 
+  temperatura.on("change", function () {
+    temperaturaAtual = this.celsius;
+    if (this.celsius >= 30 && acaoAlarme == false) {
+      motor.fwd(1);
+    } else if (acaoVentilador == false) {
+      motor.fwd(255);
+    }
+    // console.log(this.celsius + "°C", this.fahrenheit + "°F");
+  });
 
-  // sensor.on("data", function() {
-  //   console.log("data");
-  // });
 
   // "calibrated" occurs once, at the beginning of a session,
   sensor.on("calibrated", function () {
@@ -56,8 +74,10 @@ arduino.on('ready', function () {
   // proximal area is disrupted, generally by some form of movement
   sensor.on("motionstart", function () {
     console.log("motionstart");
+    // motor.fwd(1);
     if (acaoAlarme) {
-      alarm.startAlarm();
+      disparoAlarme = true;
+      alarm.playAlarm();
     }
   });
 
@@ -101,7 +121,8 @@ function servidor(request, response) {
         console.log('ACAO LOGIN', jsonP);
 
         var user;
-        fazerLogin(login, senha, function (err, content) {
+        controllerBd.login(login, senha, function (err, content) {
+          // fazerLogin(login, senha, function (err, content) {
           if (err) {
             console.log(err);
             response.writeHead(401);
@@ -124,30 +145,9 @@ function servidor(request, response) {
     }
 
   } else if (url == '/portao') {
+    motor.fwd(255);
     response.writeHead(302, { 'Location': '/' });
     response.end();
-    buzzer.play({
-      song: "C - D - C",
-      beats: 1 / 3,
-      tempo: 60
-    });
-    if (chavePortao == 'F') {
-      alarmePortao = setInterval(function () {
-        buzzer.play({
-          song: "C - C - C",
-          beats: 1 / 3,
-          tempo: 60
-        });
-      }, 5000);
-      chavePortao = 'A';
-      portao.to(-90);
-    } else {
-      clearInterval(alarmePortao)
-      chavePortao = 'F';
-      portao.to(90);
-    }
-
-
 
     if (request.method == 'POST') {
       request.on('data', function (data) {
@@ -156,11 +156,20 @@ function servidor(request, response) {
       request.on('end', function () {
         var POST = qs.parse(body);
         var jsonS = JSON.parse(body)
-        console.log(jsonS.controlePortao)
         let acao = jsonS.controlePortao == 0 ? 'FECHAR' : 'ABRIR';
+
+        console.log("POrtao", acao);
+        if (acao == "ABRIR") {
+          portao.to(-90);
+          alarm.playAlarmOpen();
+        } else {
+          portao.to(90);
+          alarm.playAlarmClose();
+        }
+
         let idLogin = jsonS.idLogin;
         let tipo = 'PORTAO';
-        saveLog(acao, tipo, idLogin, function (err) {
+        controllerBd.saveLog(acao, tipo, idLogin, function (err) {
           if (err) {
             console.log('erro ao salvar log', err);
           } else {
@@ -174,26 +183,7 @@ function servidor(request, response) {
   } else if (url == '/porta') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
-    buzzer.play({
-      song: "C - D -",
-      beats: 1 / 2,
-      tempo: 60
-    });
-    if (chavePorta == 'F') {
-      alarmePorta = setInterval(function () {
-        buzzer.play({
-          song: "C - C - C",
-          beats: 1 / 3,
-          tempo: 60
-        });
-      }, 5000);
-      chavePorta = 'A';
-      porta.to(90);
-    } else {
-      clearInterval(alarmePorta)
-      chavePorta = 'F';
-      porta.to(-90);
-    }
+
     if (request.method == 'POST') {
       request.on('data', function (data) {
         body = data;
@@ -204,7 +194,17 @@ function servidor(request, response) {
         let acao = jsonS.controlePorta == 0 ? 'FECHAR' : 'ABRIR';
         let idLogin = jsonS.idLogin;
         let tipo = 'PORTA';
-        saveLog(acao, tipo, idLogin, function (err) {
+
+        console.log("POrta", acao);
+        if (acao == "ABRIR") {
+          porta.to(90);
+          alarm.playAlarmOpen();
+        } else {
+          porta.to(-90);
+          alarm.playAlarmClose();
+        }
+
+        controllerBd.saveLog(acao, tipo, idLogin, function (err) {
           if (err) {
             console.log('erro ao salvar log', err);
           } else {
@@ -215,56 +215,104 @@ function servidor(request, response) {
       });
     }
   } else if (url == '/getLogs') {
-    getLogs(function (err, content) {
+    controllerBd.getLogs(function (err, content) {
       if (err) {
         console.log(err);
       } else {
-        // console.log(content)
+        console.log(content)
         sendLogs(response, content);
       }
     })
-  } else if (url == '/stopAlarme') {
+  } else if (url == '/alarme') {
     response.writeHead(302, { 'Location': '/' });
     response.end();
-    alarm.stopAlarm();
+
+    if (request.method == 'POST') {
+      request.on('data', function (data) {
+        body = data;
+      });
+      request.on('end', function () {
+        var POST = qs.parse(body);
+        var jsonS = JSON.parse(body)
+        let acao = jsonS.controleAlarme == 0 ? 'DESATIVADO' : 'ATIVADO';
+        let idLogin = jsonS.idLogin;
+        if (acao == 'ATIVADO') {
+          alarm.playAlarmClose();
+          acaoAlarme = true;
+        } else if (acao == 'DESATIVADO') {
+          alarm.stopAlarm();
+          acaoAlarme = false;
+          disparoAlarme = false;
+          setTimeout(() => {
+            alarm.playAlarmOpen();
+          }, 1000);//espera 1 segundo para soar som de desativacao
+        }
+
+        controllerBd.saveLogAlarme(acao, idLogin, function (err) {
+          if (err) {
+            console.log('erro ao salvar log', err);
+          } else {
+            console.log('log salvo');
+          }
+        });
+      });
+    }
+
+  } else if (url == '/ventilador') {
+    response.writeHead(302, { 'Location': '/' });
+    response.end();
+
+    if (request.method == 'POST') {
+      request.on('data', function (data) {
+        body = data;
+      });
+      request.on('end', function () {
+        var POST = qs.parse(body);
+        var jsonS = JSON.parse(body)
+        let acao = jsonS.controleVentilador == 0 ? 'DESATIVADO' : 'ATIVADO';
+        let idLogin = jsonS.idLogin;
+        if (acao == 'ATIVADO') {
+          acaoVentilador = true;
+          motor.fwd(1);
+        } else if (acao == 'DESATIVADO') {
+          acaoVentilador = false;
+          motor.fwd(255);
+        }
+      });
+    }
+  } else if (url == '/led') {
+    request.on('data', function (data) {
+      body = data;
+    });
+    request.on('end', function () {
+      var POST = qs.parse(body);
+      var jsonS = JSON.parse(body)
+      let acao = jsonS.controleLed == 0 ? 'DESATIVADO' : 'ATIVADO';
+      let idLogin = jsonS.idLogin;
+      if (acao == 'ATIVADO') {
+        led.on();
+      } else if (acao == 'DESATIVADO') {
+        led.off();
+      }
+    });
+  } else if (url == '/disparoAlarme') {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    var json = JSON.stringify({
+      disparoAlarme: disparoAlarme,
+    });
+    response.end(json);
+  } else if (url == '/temperatura') {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    var json = JSON.stringify({
+      temperatura: temperaturaAtual,
+    });
+    response.end(json);
   } else {
     response.writeHead(200);
     response.end("<h1>Erro 404</h1>");
   }
 };
 
-function enviaAlertaAlarmeDisparou() {
-
-}
-
-
-function fazerLogin(login, senha, callback) {
-  connection.query(
-    'SELECT idlogin, login FROM `login` WHERE `login` = ? AND `senha` = ?',
-    [login, senha],
-    function (err, rows) {
-      if (err) {
-        callback(err, null);
-      } else {
-        callback(null, rows[0]);
-      }
-    }
-  );
-}
-
-function getLogs(callback) {
-  connection.query(
-    'SELECT * FROM `logs` ORDER BY data DESC',
-    function (err, result, fields) {
-      // console.log(rows)
-      if (err) {
-        callback(err, null);
-      } else {
-        callback(null, result);
-      }
-    }
-  );
-}
 
 function sendLogs(response, logs) {
   response.writeHead(200, { "Content-Type": "application/json" });
@@ -272,24 +320,6 @@ function sendLogs(response, logs) {
     logs: logs,
   });
   response.end(json);
-}
-
-function saveLog(acao, tipo, idLogin, callback) {
-  var data = new Date();
-  var sql = "INSERT INTO logs (acao, tipo, data, idLogin) VALUES ?";
-  var values = [
-    [acao, tipo, data, idLogin],
-  ];
-  connection.query(
-    sql, [values], function (err) {
-      // console.log(rows)
-      if (err) {
-        callback(err);
-      } else {
-        callback(null);
-      }
-    }
-  );
 }
 
 http.listen(3000, function () {

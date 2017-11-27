@@ -1,17 +1,24 @@
 module.exports = {
     PIR: {
-        PIN: 7
-    },
-    PORTAO: {
-        PIN: 8
-    },
-    PORTA: {
         PIN: 9
     },
-    BUZZER: {
+    PORTAO: {
+        PIN: 11
+    },
+    PORTA: {
         PIN: 10
     },
+    BUZZER: {
+        PIN: 8
+    },
     LED: {
-        PIN: 11
+        PIN: 7
+    },
+    SENSOR: {
+        PIN: 3
+    },
+    TEMPERATURA:{
+        PIN: 'A0',
+        TYPE: 'LM35'
     }
 }

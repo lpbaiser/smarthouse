@@ -12,6 +12,7 @@ connection.connect(function (err) {
     console.log("Connected!");
     var table_login = "CREATE TABLE login (idlogin int(11) NOT NULL AUTO_INCREMENT, login varchar(45) DEFAULT NULL, senha varchar(45) DEFAULT NULL, PRIMARY KEY (idlogin));";
     var table_logs = "CREATE TABLE logs (idlogs int(11) NOT NULL AUTO_INCREMENT, acao enum('ABRIR','FECHAR') NOT NULL, tipo enum('PORTAO','PORTA') NOT NULL, data datetime NOT NULL, idlogin int(11) DEFAULT NULL, PRIMARY KEY (idlogs), KEY idlogin (idlogin), CONSTRAINT idlogin FOREIGN KEY (idlogin) REFERENCES login (idlogin));";
+    var table_logs = "CREATE TABLE logs_alarme (idlogs int(11) NOT NULL AUTO_INCREMENT, acao enum('ATIVADO','DESATIVADO') NOT NULL, data datetime NOT NULL, idlogin int(11) DEFAULT NULL, PRIMARY KEY (idlogs), KEY idlogin (idlogin), CONSTRAINT idlogin FOREIGN KEY (idlogin) REFERENCES login (idlogin));";
     var insert_login = "INSERT INTO login (login, senha) VALUES ?";
     var values = [
         ['login', '1234'],
