@@ -35,7 +35,7 @@
                     let idLogin = JSON.parse(xhttp.response).idlogin;
                     localStorage.setItem('idlogin', idLogin);
                     localStorage.setItem('login', login);
-                    window.location.href = "/index";
+                    window.location.href = "/panel-control";
                 } else {
                     document.getElementById("erro").innerHTML = 'Credenciais inválidas!';
                 }
@@ -43,7 +43,7 @@
         };
         function entrar() {
             var xhttp = new XMLHttpRequest();
-            xhttp.open("POST", "/index", true);
+            xhttp.open("POST", "/panel-control", true);
             xhttp.send();
         };
     </script>
