@@ -8,7 +8,12 @@
 
 <body>
   <div class="container">
-
+    <div class="col-md-12">
+      <a id="portao" onclick="funcSair.call(this)" class="btn btn-danger">Sair</a>
+      <div class="col-md-11">
+        <div id='logado' class="pull-right">Login: </div>
+      </div>
+    </div>
     <div class="col-md-12">
       <div class="col-md-4">
         <h3>Controles do sistema</h3>
@@ -66,6 +71,8 @@
   </div>
 
   <script type="text/javascript">
+    let login = localStorage.getItem('login');
+    document.getElementById("logado").innerHTML = 'Login: ' + login;
     let xmlHttp = new XMLHttpRequest();
     let idLogin = localStorage.getItem('idlogin');
     let controlePortao = 1;
@@ -258,7 +265,14 @@
       }
     };
 
-    // tabelaPortao += "<td>" + moment.tz(item.data, 'America/Sao_Paulo').format('DD/MM/YYYY hh:mm:ss') + "</td></tr>";
+    function funcSair() {
+      localStorage.removeItem(login);
+      localStorage.removeItem(idLogin);
+      // localStorage.removeItem(isLogado);
+      // xmlHttp.open("POST", '/', true); 
+      // xmlHttp.send(null);
+    }
+
     setInterval(() => {
       getTemperatura();
     }, 60000)//atualiza temperatura a cada minuto;
@@ -270,8 +284,6 @@
     window.onload = getTemperatura();
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <!-- <script src="https://momentjs.com/downloads/moment.js"></script> -->
-  <!-- <script src="https://momentjs.com/downloads/moment-timezone.js"></script> -->
   <script src="moment.js"></script>
 </body>
 

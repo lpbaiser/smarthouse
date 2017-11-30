@@ -52,7 +52,7 @@ arduino.on('ready', function () {
 
   porta.to(-90);
 
-  motor = new five.Motor([3, 4]);
+  motor = new five.Motor(CONFIG.FAN.PIN);
   motor.fwd(255);
 
   temperatura.on("change", function () {

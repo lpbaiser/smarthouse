@@ -14,8 +14,8 @@ module.exports = {
     LED: {
         PIN: 7
     },
-    SENSOR: {
-        PIN: 3
+    FAN: {
+        PIN: [3,4]
     },
     TEMPERATURA:{
         PIN: 'A0',

@@ -18,10 +18,8 @@
                 <label for="exampleInputPassword1">Senha</label>
                 <input type="password" id='senha' name='senha' class="form-control" id="exampleInputPassword1" placeholder="digite sua senha">
             </div>
-            <!-- <button  class="btn btn-primary pull-right">Acessar</button> -->
-            <a id="logar" onclick="logar.call(this)" class="btn btn-primary">Acessar</a>
+            <a id="logar" onclick="logar.call(this)" class="btn btn-primary pull-right">Acessar</a>
             <div id='erro'></div>
-            <!-- <a id="entrar" onclick="entrar.call(this)" class="btn btn-primary">Entrar</a> -->
         </form>
     </div>
     <script>
@@ -36,6 +34,7 @@
                 if (xhttp.readyState == 4 && xhttp.status == 200) {
                     let idLogin = JSON.parse(xhttp.response).idlogin;
                     localStorage.setItem('idlogin', idLogin);
+                    localStorage.setItem('login', login);
                     window.location.href = "/index";
                 } else {
                     document.getElementById("erro").innerHTML = 'Credenciais inválidas!';
