@@ -266,11 +266,19 @@
     };
 
     function funcSair() {
-      localStorage.removeItem(login);
-      localStorage.removeItem(idLogin);
-      // localStorage.removeItem(isLogado);
-      // xmlHttp.open("POST", '/', true); 
-      // xmlHttp.send(null);
+      // localStorage.removeItem('login');
+      // localStorage.removeItem('idLogin');
+      window.localStorage.removeItem(login);
+      window.location.href = "/";
+    }
+
+    function isLogado() {
+      getLogs();
+      getTemperatura(); 
+      let login = localStorage.getItem('login');
+      if (!login) {
+        window.location.href = "/";
+      }
     }
 
     setInterval(() => {
@@ -281,7 +289,7 @@
       getDisparoAlarme();
     }, 1000)//verifica se alarme disparou a cada 1 segundo
 
-    window.onload = getTemperatura();
+    window.onload = isLogado();
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="moment.js"></script>

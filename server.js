@@ -57,7 +57,7 @@ arduino.on('ready', function () {
 
   temperatura.on("change", function () {
     temperaturaAtual = this.celsius;
-    if (this.celsius >= 30 && acaoAlarme == false) {
+    if (this.celsius >= CONFIG.TEMPERATURA.TEMP && acaoAlarme == false) {
       motor.fwd(1);
     } else if (acaoVentilador == false) {
       motor.fwd(255);
@@ -97,7 +97,7 @@ function servidor(request, response) {
   if (url == '/') {
     response.writeHead(200);
     response.end(fs.readFileSync('./login.html'));
-  } else if (url == '/index') {
+  } else if (url == '/panel-control') {
     response.writeHead(200, {
       "Content-Type": "text/html"
     });
@@ -107,7 +107,7 @@ function servidor(request, response) {
       response.end();
     });
 
-  } else if (url == '/login') {
+  } else if (url == '/doLogin') {
     let login;
     let senha;
     if (request.method == 'POST') {

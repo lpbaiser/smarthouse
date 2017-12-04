@@ -19,6 +19,7 @@ module.exports = {
     },
     TEMPERATURA:{
         PIN: 'A0',
-        TYPE: 'LM35'
+        TYPE: 'LM35',
+        TEMP: '30'
     }
 }
